@@ -92,17 +92,19 @@ export function Prompt(props: PromptProps) {
   let promptPartTypeId: number
 
   sdk.event.on(TuiEvent.PromptAppend.type, (evt) => {
-    input.insertText(evt.properties.text)
+    input?.insertText(evt.properties.text)
     setTimeout(() => {
-      input.getLayoutNode().markDirty()
-      input.gotoBufferEnd()
+      input?.getLayoutNode().markDirty()
+      input?.gotoBufferEnd()
       renderer.requestRender()
     }, 0)
   })
 
   createEffect(() => {
-    if (props.disabled) input.cursorColor = theme.backgroundElement
-    if (!props.disabled) input.cursorColor = theme.text
+    if (input) {
+      if (props.disabled) input.cursorColor = theme.backgroundElement
+      if (!props.disabled) input.cursorColor = theme.text
+    }
   })
 
   const lastUserMessage = createMemo(() => {
@@ -158,8 +160,8 @@ export function Prompt(props: PromptProps) {
         category: "Prompt",
         disabled: true,
         onSelect: (dialog) => {
-          input.extmarks.clear()
-          input.clear()
+          input?.extmarks.clear()
+          input?.clear()
           dialog.clear()
         },
       },
@@ -170,7 +172,7 @@ export function Prompt(props: PromptProps) {
         keybind: "input_submit",
         category: "Prompt",
         onSelect: (dialog) => {
-          if (!input.focused) return
+          if (!input?.focused) return
           submit()
           dialog.clear()
         },
@@ -245,7 +247,7 @@ export function Prompt(props: PromptProps) {
           const content = await Editor.open({ value, renderer })
           if (!content) return
 
-          input.setText(content)
+          input?.setText(content)
 
           // Update positions for nonTextParts based on their location in new content
           // Filter out parts whose virtual text was deleted
@@ -304,7 +306,7 @@ export function Prompt(props: PromptProps) {
             parts: updatedNonTextParts,
           })
           restoreExtmarksFromParts(updatedNonTextParts)
-          input.cursorOffset = Bun.stringWidth(content)
+          if (input) input.cursorOffset = Bun.stringWidth(content)
         },
       },
     ]
@@ -320,6 +322,7 @@ export function Prompt(props: PromptProps) {
   })
 
   function restoreExtmarksFromParts(parts: PromptInfo["parts"]) {
+    if (!input) return
     input.extmarks.clear()
     setStore("extmarkToPartIndex", new Map())
 
@@ -409,8 +412,8 @@ export function Prompt(props: PromptProps) {
           input: store.prompt.input,
           parts: store.prompt.parts,
         })
-        input.extmarks.clear()
-        input.clear()
+        input?.extmarks.clear()
+        input?.clear()
         setStore("prompt", { input: "", parts: [] })
         setStore("extmarkToPartIndex", new Map())
         dialog.clear()
@@ -424,10 +427,12 @@ export function Prompt(props: PromptProps) {
       onSelect: (dialog) => {
         const entry = stash.pop()
         if (entry) {
-          input.setText(entry.input)
+          input?.setText(entry.input)
           setStore("prompt", { input: entry.input, parts: entry.parts })
-          restoreExtmarksFromParts(entry.parts)
-          input.gotoBufferEnd()
+          if (input) {
+            restoreExtmarksFromParts(entry.parts)
+            input.gotoBufferEnd()
+          }
         }
         dialog.clear()
       },
@@ -454,26 +459,28 @@ export function Prompt(props: PromptProps) {
 
   props.ref?.({
     get focused() {
-      return input.focused
+      return input?.focused ?? false
     },
     get current() {
       return store.prompt
     },
     focus() {
-      input.focus()
+      input?.focus()
     },
     blur() {
-      input.blur()
+      input?.blur()
     },
     set(prompt) {
-      input.setText(prompt.input)
+      input?.setText(prompt.input)
       setStore("prompt", prompt)
-      restoreExtmarksFromParts(prompt.parts)
-      input.gotoBufferEnd()
+      if (input) {
+        restoreExtmarksFromParts(prompt.parts)
+        input.gotoBufferEnd()
+      }
     },
     reset() {
-      input.clear()
-      input.extmarks.clear()
+      input?.clear()
+      input?.extmarks.clear()
       setStore("prompt", {
         input: "",
         parts: [],
@@ -509,7 +516,7 @@ export function Prompt(props: PromptProps) {
     let inputText = store.prompt.input
 
     // Expand pasted text inline before submitting
-    const allExtmarks = input.extmarks.getAllForTypeId(promptPartTypeId)
+    const allExtmarks = input?.extmarks.getAllForTypeId(promptPartTypeId) ?? []
     const sortedExtmarks = allExtmarks.sort((a: { start: number }, b: { start: number }) => b.start - a.start)
 
     for (const extmark of sortedExtmarks) {
@@ -591,7 +598,7 @@ export function Prompt(props: PromptProps) {
       ...store.prompt,
       mode: currentMode,
     })
-    input.extmarks.clear()
+    input?.extmarks.clear()
     setStore("prompt", {
       input: "",
       parts: [],
@@ -607,11 +614,12 @@ export function Prompt(props: PromptProps) {
           sessionID,
         })
       }, 50)
-    input.clear()
+    input?.clear()
   }
   const exit = useExit()
 
   function pasteText(text: string, virtualText: string) {
+    if (!input) return
     const currentOffset = input.visualCursor.offset
     const extmarkStart = currentOffset
     const extmarkEnd = extmarkStart + virtualText.length
@@ -646,6 +654,7 @@ export function Prompt(props: PromptProps) {
   }
 
   async function pasteImage(file: { filename?: string; content: string; mime: string }) {
+    if (!input) return
     const currentOffset = input.visualCursor.offset
     const extmarkStart = currentOffset
     const count = store.prompt.parts.filter((x) => x.type === "file").length
@@ -915,15 +924,21 @@ export function Prompt(props: PromptProps) {
 
                 // Force layout update and render for the pasted content
                 setTimeout(() => {
-                  input.getLayoutNode().markDirty()
-                  input.gotoBufferEnd()
-                  renderer.requestRender()
+                  if (input) {
+                    input.getLayoutNode().markDirty()
+                    input.gotoBufferEnd()
+                    renderer.requestRender()
+                  }
                 }, 0)
               }}
               ref={(r: TextareaRenderable) => {
                 input = r
+                if (store.prompt.input && input) {
+                  input.setText(store.prompt.input)
+                  restoreExtmarksFromParts(store.prompt.parts)
+                }
                 setTimeout(() => {
-                  input.cursorColor = theme.text
+                  if (input) input.cursorColor = theme.text
                 }, 0)
               }}
               onMouseDown={(r: MouseEvent) => r.target?.focus()}
