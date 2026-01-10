@@ -94,7 +94,7 @@ export function Prompt(props: PromptProps) {
   sdk.event.on(TuiEvent.PromptAppend.type, (evt) => {
     input?.insertText(evt.properties.text)
     setTimeout(() => {
-      input?.getLayoutNode().markDirty()
+      input?.getLayoutNode?.()?.markDirty()
       input?.gotoBufferEnd()
       renderer.requestRender()
     }, 0)
@@ -932,7 +932,7 @@ export function Prompt(props: PromptProps) {
                 // Force layout update and render for the pasted content
                 setTimeout(() => {
                   if (input) {
-                    input.getLayoutNode().markDirty()
+                    input.getLayoutNode?.()?.markDirty()
                     input.gotoBufferEnd()
                     renderer.requestRender()
                   }
