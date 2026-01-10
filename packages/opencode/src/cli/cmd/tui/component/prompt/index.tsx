@@ -202,7 +202,7 @@ export function Prompt(props: PromptProps) {
         category: "Session",
         onSelect: (dialog) => {
           if (autocomplete.visible) return
-          if (!input.focused) return
+          if (!input?.focused) return
           // TODO: this should be its own command
           if (store.mode === "shell") {
             setStore("mode", "normal")
@@ -446,6 +446,7 @@ export function Prompt(props: PromptProps) {
         dialog.replace(() => (
           <DialogStash
             onSelect={(entry) => {
+              if (!input) return
               input.setText(entry.input)
               setStore("prompt", { input: entry.input, parts: entry.parts })
               restoreExtmarksFromParts(entry.parts)
@@ -806,8 +807,8 @@ export function Prompt(props: PromptProps) {
                   // If no image, let the default paste behavior continue
                 }
                 if (keybind.match("input_clear", e) && store.prompt.input !== "") {
-                  input.clear()
-                  input.extmarks.clear()
+                  input?.clear()
+                  input?.extmarks.clear()
                   setStore("prompt", {
                     input: "",
                     parts: [],
@@ -823,13 +824,13 @@ export function Prompt(props: PromptProps) {
                     return
                   }
                 }
-                if (e.name === "!" && input.visualCursor.offset === 0) {
+                if (e.name === "!" && input?.visualCursor.offset === 0) {
                   setStore("mode", "shell")
                   e.preventDefault()
                   return
                 }
                 if (store.mode === "shell") {
-                  if ((e.name === "backspace" && input.visualCursor.offset === 0) || e.name === "escape") {
+                  if ((e.name === "backspace" && input?.visualCursor.offset === 0) || e.name === "escape") {
                     setStore("mode", "normal")
                     e.preventDefault()
                     return
@@ -838,9 +839,10 @@ export function Prompt(props: PromptProps) {
                 if (store.mode === "normal") autocomplete.onKeyDown(e)
                 if (!autocomplete.visible) {
                   if (
-                    (keybind.match("history_previous", e) && input.cursorOffset === 0) ||
-                    (keybind.match("history_next", e) && input.cursorOffset === input.plainText.length)
+                    (keybind.match("history_previous", e) && input?.cursorOffset === 0) ||
+                    (keybind.match("history_next", e) && input?.cursorOffset === input?.plainText.length)
                   ) {
+                    if (!input) return
                     const direction = keybind.match("history_previous", e) ? -1 : 1
                     const item = history.move(direction, input.plainText)
 
@@ -856,8 +858,13 @@ export function Prompt(props: PromptProps) {
                     return
                   }
 
-                  if (keybind.match("history_previous", e) && input.visualCursor.visualRow === 0) input.cursorOffset = 0
-                  if (keybind.match("history_next", e) && input.visualCursor.visualRow === input.height - 1)
+                  if (keybind.match("history_previous", e) && input?.visualCursor.visualRow === 0 && input)
+                    input.cursorOffset = 0
+                  if (
+                    keybind.match("history_next", e) &&
+                    input?.visualCursor.visualRow === (input?.height ?? 0) - 1 &&
+                    input
+                  )
                     input.cursorOffset = input.plainText.length
                 }
               }}
