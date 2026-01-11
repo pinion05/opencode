@@ -92,10 +92,10 @@ export function Prompt(props: PromptProps) {
   let promptPartTypeId: number
 
   sdk.event.on(TuiEvent.PromptAppend.type, (evt) => {
-    input.insertText(evt.properties.text)
+    input?.insertText(evt.properties.text)
     setTimeout(() => {
-      input.getLayoutNode().markDirty()
-      input.gotoBufferEnd()
+      input?.getLayoutNode().markDirty()
+      input?.gotoBufferEnd()
       renderer.requestRender()
     }, 0)
   })
@@ -320,6 +320,7 @@ export function Prompt(props: PromptProps) {
   })
 
   function restoreExtmarksFromParts(parts: PromptInfo["parts"]) {
+    if (!input) return
     input.extmarks.clear()
     setStore("extmarkToPartIndex", new Map())
 
@@ -454,26 +455,26 @@ export function Prompt(props: PromptProps) {
 
   props.ref?.({
     get focused() {
-      return input.focused
+      return input?.focused
     },
     get current() {
       return store.prompt
     },
     focus() {
-      input.focus()
+      input?.focus()
     },
     blur() {
-      input.blur()
+      input?.blur()
     },
     set(prompt) {
-      input.setText(prompt.input)
+      input?.setText(prompt.input)
       setStore("prompt", prompt)
       restoreExtmarksFromParts(prompt.parts)
-      input.gotoBufferEnd()
+      input?.gotoBufferEnd()
     },
     reset() {
-      input.clear()
-      input.extmarks.clear()
+      input?.clear()
+      input?.extmarks.clear()
       setStore("prompt", {
         input: "",
         parts: [],
