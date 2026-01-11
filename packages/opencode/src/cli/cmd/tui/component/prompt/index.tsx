@@ -455,7 +455,7 @@ export function Prompt(props: PromptProps) {
 
   props.ref?.({
     get focused() {
-      return input?.focused
+      return input?.focused ?? false
     },
     get current() {
       return store.prompt
