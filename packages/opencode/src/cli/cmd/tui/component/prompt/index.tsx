@@ -94,7 +94,7 @@ export function Prompt(props: PromptProps) {
   sdk.event.on(TuiEvent.PromptAppend.type, (evt) => {
     input?.insertText(evt.properties.text)
     setTimeout(() => {
-      input?.getLayoutNode().markDirty()
+      input?.getLayoutNode()?.markDirty()
       input?.gotoBufferEnd()
       renderer.requestRender()
     }, 0)
@@ -474,7 +474,7 @@ export function Prompt(props: PromptProps) {
     },
     reset() {
       input?.clear()
-      input?.extmarks.clear()
+      input?.extmarks?.clear()
       setStore("prompt", {
         input: "",
         parts: [],
