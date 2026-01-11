@@ -158,8 +158,8 @@ export function Prompt(props: PromptProps) {
         category: "Prompt",
         disabled: true,
         onSelect: (dialog) => {
-          input.extmarks.clear()
-          input.clear()
+          input?.extmarks?.clear()
+          input?.clear()
           dialog.clear()
         },
       },
@@ -170,7 +170,7 @@ export function Prompt(props: PromptProps) {
         keybind: "input_submit",
         category: "Prompt",
         onSelect: (dialog) => {
-          if (!input.focused) return
+          if (!input?.focused) return
           submit()
           dialog.clear()
         },
@@ -200,7 +200,7 @@ export function Prompt(props: PromptProps) {
         category: "Session",
         onSelect: (dialog) => {
           if (autocomplete.visible) return
-          if (!input.focused) return
+          if (!input?.focused) return
           // TODO: this should be its own command
           if (store.mode === "shell") {
             setStore("mode", "normal")
